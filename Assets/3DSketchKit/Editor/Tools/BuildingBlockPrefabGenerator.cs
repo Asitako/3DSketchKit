@@ -147,7 +147,7 @@ namespace ThreeDSketchKit.Editor.Tools
 
             foreach (var path in RampSourceModelPaths)
             {
-                if (string.IsNullOrEmpty(path) || AssetDatabase.LoadMainAssetAtPath(path) == null)
+                if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) == null)
                     continue;
 
                 var meshes = AssetDatabase.LoadAllAssetsAtPath(path)
@@ -209,8 +209,31 @@ namespace ThreeDSketchKit.Editor.Tools
             target.RecalculateBounds();
         }
 
+        /// <summary>Turns on Read/Write on the source model and reimports so the mesh is CPU-readable (needed for <see cref="MeshCollider"/>).</summary>
+        static Mesh EnsureImportedMeshIsReadable(Mesh mesh)
+        {
+            if (mesh == null || mesh.isReadable)
+                return mesh;
+            var path = AssetDatabase.GetAssetPath(mesh);
+            if (string.IsNullOrEmpty(path))
+                return mesh;
+            var modelImporter = AssetImporter.GetAtPath(path) as ModelImporter;
+            if (modelImporter == null)
+                return mesh;
+            if (modelImporter.isReadable)
+                return mesh;
+            var meshName = mesh.name;
+            modelImporter.isReadable = true;
+            modelImporter.SaveAndReimport();
+            return AssetDatabase.LoadAllAssetsAtPath(path)
+                       .OfType<Mesh>()
+                       .FirstOrDefault(m => m != null && m.name == meshName)
+                   ?? mesh;
+        }
+
         static void SaveRampPrefab(Mesh sharedMesh, Material material)
         {
+            sharedMesh = EnsureImportedMeshIsReadable(sharedMesh);
             var gameObject = new GameObject("Ramp");
             try
             {

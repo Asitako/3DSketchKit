@@ -1,0 +1,11 @@
+{
+    "name": "ThreeDSketchKit.Editor.Tests",
+    "rootNamespace": "ThreeDSketchKit.Editor.Tests",
+    "references": [
+        "ThreeDSketchKit.Editor",
+        "ThreeDSketchKit.Runtime"
+    ],
+    "includePlatforms": [ "Editor" ],
+    "optionalUnityReferences": [ "TestAssemblies" ],
+    "defineConstraints": []
+}

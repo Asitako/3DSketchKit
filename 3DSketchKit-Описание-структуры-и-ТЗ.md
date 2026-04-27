@@ -147,7 +147,7 @@ Assets/3DSketchKit/
 
 | Файл                                 | Назначение                                                                    |
 | ------------------------------------ | ----------------------------------------------------------------------------- |
-| `Windows/SketchKitEditorWindow.cs`   | Окно: комната из выделения, слот способности (abilityId + qualified name), кнопки SO, пересбор каталога. |
+| `Windows/SketchKitEditorWindow.cs`   | Окно: комната из выборки (2+ не-комнаты, общий `OwnerRoom` → вложенная `Room` под владельцем; тот же лимит глубины с учётом цепочки владельца; остальные правила/Unpack), Unpack, слот способности, кнопки SO, пересбор каталога. |
 | `Inspectors/AbilityManagerEditor.cs` | Кнопка принудительного `RebuildAbilities()` в инспекторе.                     |
 | `SketchKitAbilityCatalogEditorSync.cs` | `InitializeOnLoad`: синхронизация `AbilityTypeCatalog` в редакторе без Play. |
 

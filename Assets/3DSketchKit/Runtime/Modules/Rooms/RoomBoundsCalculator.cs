@@ -16,7 +16,8 @@ namespace ThreeDSketchKit.Modules.Rooms
 
             foreach (var member in members)
             {
-                if (member is not MonoBehaviour roomMemberBehaviour || roomMemberBehaviour == null)
+                var roomMemberBehaviour = member as MonoBehaviour;
+                if (roomMemberBehaviour == null)
                     continue;
 
                 EncapsulateObject(roomMemberBehaviour.gameObject, ref bounds, ref hasAny);

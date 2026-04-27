@@ -9,7 +9,7 @@ namespace ThreeDSketchKit.Core.Components
     public sealed class Room : MonoBehaviour, IRoom
     {
         [SerializeField] RoomData roomData;
-        [SerializeField] List<RoomMemberComponent> roomMembers = new();
+        [SerializeField] List<RoomMemberComponent> roomMembers = new List<RoomMemberComponent>();
 
         RoomMemberReadOnlyAdapter _adapter;
 
@@ -18,19 +18,21 @@ namespace ThreeDSketchKit.Core.Components
 
         public void AddMember(IRoomMember member)
         {
-            if (member is not RoomMemberComponent roomMemberComponent || roomMemberComponent == null)
+            var c = member as RoomMemberComponent;
+            if (c == null)
                 return;
-            if (roomMembers.Contains(roomMemberComponent))
+            if (roomMembers.Contains(c))
                 return;
-            roomMembers.Add(roomMemberComponent);
+            roomMembers.Add(c);
             member.OwnerRoom = this;
         }
 
         public void RemoveMember(IRoomMember member)
         {
-            if (member is not RoomMemberComponent roomMemberComponent)
+            var c = member as RoomMemberComponent;
+            if (c == null)
                 return;
-            if (roomMembers.Remove(roomMemberComponent))
+            if (roomMembers.Remove(c))
                 member.OwnerRoom = null;
         }
 

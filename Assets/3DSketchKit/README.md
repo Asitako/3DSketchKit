@@ -17,7 +17,7 @@ Modular Unity prototyping kit: attach plain `IAbility` modules via `AbilityManag
 
 1. Add `AbilityManager` to a character. Prefer **stable ability ids** (see `SketchKitBuiltInAbilityIds`) or use the **3D Sketch Kit** window to append slots (fills `abilityId` + assembly-qualified name when the type has `SketchKitAbilityIdAttribute`).
 2. Add `MovementComponent` / `HealthComponent` as needed; optional `EffectReceiverComponent` for buff zones.
-3. For rooms: select block roots → **Create Room From Selection** in the Rooms tab.
+3. For rooms: select block roots → **Create Room From Selection** in the Rooms tab; to undo that grouping, select the Room or any member → **Unpack room** (members reparent to the scene root, or under the parent **Room** if this room was nested inside one). A GameObject that is already a member of a room cannot be added to a new room until you unpack it, except when you select **two or more** objects that are **all** members of the **same** room and **none** of them is a `Room` root: then a new room is created **under** that owner and the selection becomes the new room’s members. You need at least a block, two **Room** roots, or a mix — not a single **Room** alone. After creation, a branch may contain at most **three** `Room` components (this limit applies to nested “same owner” as well, counting the owner chain), deeper is rejected.
 4. For zones: add `ZoneTrigger` + trigger collider; assign `ZoneEffectData` assets.
 
 ### Built-in ability ids (`SketchKitBuiltInAbilityIds`)

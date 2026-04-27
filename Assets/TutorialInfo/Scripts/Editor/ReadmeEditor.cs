@@ -79,7 +79,8 @@ public class ReadmeEditor : Editor
         var ids = AssetDatabase.FindAssets("Readme t:Readme");
         if (ids.Length == 1)
         {
-            var readmeObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(ids[0]));
+            var path = AssetDatabase.GUIDToAssetPath(ids[0]);
+            var readmeObject = AssetDatabase.LoadAssetAtPath<Readme>(path);
 
             Selection.objects = new UnityEngine.Object[] { readmeObject };
 
