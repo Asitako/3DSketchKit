@@ -38,6 +38,12 @@ namespace ThreeDSketchKit.Utility
                 }
             }
 
+            foreach (var catalogType in AbilityTypeCatalog.GetDistinctRegisteredAbilityTypes())
+            {
+                if (!results.Contains(catalogType))
+                    results.Add(catalogType);
+            }
+
             return results.OrderBy(candidateType => candidateType.FullName, StringComparer.Ordinal).ToList();
         }
 

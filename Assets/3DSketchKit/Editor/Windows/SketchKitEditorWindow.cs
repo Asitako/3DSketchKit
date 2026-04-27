@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Reflection;
+using ThreeDSketchKit.Core.Attributes;
 using ThreeDSketchKit.Core.Components;
 using ThreeDSketchKit.Core.Data;
 using ThreeDSketchKit.Utility;
@@ -72,6 +74,8 @@ namespace ThreeDSketchKit.Editor.Windows
             EditorGUILayout.LabelField("Ability types", EditorStyles.boldLabel);
             if (GUILayout.Button("Refresh ability list"))
                 RefreshAbilityTypes();
+            if (GUILayout.Button("Rebuild ability type catalog"))
+                AbilityTypeCatalog.RefreshDiscoveredAbilities();
 
             if (_abilityTypes.Length == 0)
             {
@@ -87,9 +91,12 @@ namespace ThreeDSketchKit.Editor.Windows
                 if (GUILayout.Button("Append to selected AbilityManager") && abilityManager != null)
                 {
                     Undo.RecordObject(abilityManager, "Add Ability Slot");
+                    var selectedAbilityType = _abilityTypes[_abilityTypeIndex];
+                    var stableIdAttribute = selectedAbilityType.GetCustomAttribute<SketchKitAbilityIdAttribute>(inherit: false);
                     var newAbilitySlot = new AbilitySlot
                     {
-                        assemblyQualifiedTypeName = _abilityTypes[_abilityTypeIndex].AssemblyQualifiedName,
+                        abilityId = stableIdAttribute != null ? stableIdAttribute.AbilityId : "",
+                        assemblyQualifiedTypeName = selectedAbilityType.AssemblyQualifiedName,
                         config = null,
                         startActive = true
                     };
@@ -97,6 +104,7 @@ namespace ThreeDSketchKit.Editor.Windows
                     var abilitySlotsProperty = serializedAbilityManager.FindProperty("abilitySlots");
                     abilitySlotsProperty.arraySize++;
                     var newSlotProperty = abilitySlotsProperty.GetArrayElementAtIndex(abilitySlotsProperty.arraySize - 1);
+                    newSlotProperty.FindPropertyRelative("abilityId").stringValue = newAbilitySlot.AbilityId;
                     newSlotProperty.FindPropertyRelative("assemblyQualifiedTypeName").stringValue = newAbilitySlot.AssemblyQualifiedTypeName;
                     newSlotProperty.FindPropertyRelative("config").objectReferenceValue = null;
                     newSlotProperty.FindPropertyRelative("startActive").boolValue = newAbilitySlot.StartActive;

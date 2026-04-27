@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <!-- Preserve 3D Sketch Kit runtime assembly so IAbility types activated by name survive IL2CPP managed stripping. -->
+  <assembly fullname="ThreeDSketchKit.Runtime" preserve="all" />
+</linker>

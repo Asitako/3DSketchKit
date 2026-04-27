@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using ThreeDSketchKit.Core;
+using ThreeDSketchKit.Core.Attributes;
 using ThreeDSketchKit.Core.Components;
 using ThreeDSketchKit.Core.Data;
 using ThreeDSketchKit.Core.Interfaces;
@@ -6,6 +8,7 @@ using UnityEngine;
 
 namespace ThreeDSketchKit.Modules.Abilities
 {
+    [SketchKitAbilityId(SketchKitBuiltInAbilityIds.MeleeAttack)]
     public sealed class MeleeAttackAbility : IAbility, IAbilityLifecycle
     {
         IAbilityHost _host;

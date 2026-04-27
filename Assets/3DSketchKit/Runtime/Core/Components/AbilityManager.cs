@@ -53,12 +53,14 @@ namespace ThreeDSketchKit.Core.Components
             _abilities.Clear();
             foreach (var slot in abilitySlots)
             {
-                if (string.IsNullOrWhiteSpace(slot.AssemblyQualifiedTypeName))
+                var resolutionKey = !string.IsNullOrWhiteSpace(slot.AbilityId)
+                    ? slot.AbilityId.Trim()
+                    : slot.AssemblyQualifiedTypeName;
+                if (string.IsNullOrWhiteSpace(resolutionKey))
                     continue;
-                var abilityType = Type.GetType(slot.AssemblyQualifiedTypeName);
-                if (abilityType == null || !typeof(IAbility).IsAssignableFrom(abilityType))
+                if (!AbilityTypeCatalog.TryResolveType(resolutionKey, out var abilityType))
                 {
-                    SketchKitRuntimeLog.InvalidAbilityType(this, slot.AssemblyQualifiedTypeName);
+                    SketchKitRuntimeLog.InvalidAbilityType(this, resolutionKey);
                     continue;
                 }
 
@@ -110,10 +112,18 @@ namespace ThreeDSketchKit.Core.Components
     [Serializable]
     public sealed class AbilitySlot
     {
-        [Tooltip("Assembly-qualified type name implementing IAbility.")]
+        [Tooltip("Stable id from AbilityTypeCatalog (see SketchKitAbilityIdAttribute). If set, takes precedence over assembly-qualified name.")]
+        public string abilityId = "";
+        [Tooltip("Assembly-qualified type name implementing IAbility. Used when abilityId is empty or as a fallback key.")]
         public string assemblyQualifiedTypeName;
         public AbilityData config;
         public bool startActive = true;
+
+        public string AbilityId
+        {
+            get => abilityId;
+            set => abilityId = value;
+        }
 
         public string AssemblyQualifiedTypeName
         {

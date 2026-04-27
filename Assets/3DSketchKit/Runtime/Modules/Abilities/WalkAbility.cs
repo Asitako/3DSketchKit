@@ -1,3 +1,5 @@
+using ThreeDSketchKit.Core;
+using ThreeDSketchKit.Core.Attributes;
 using ThreeDSketchKit.Core.Components;
 using ThreeDSketchKit.Core.Data;
 using ThreeDSketchKit.Core.Interfaces;
@@ -5,6 +7,7 @@ using UnityEngine;
 
 namespace ThreeDSketchKit.Modules.Abilities
 {
+    [SketchKitAbilityId(SketchKitBuiltInAbilityIds.Walk)]
     public sealed class WalkAbility : ITickableAbility, IAbilityLifecycle
     {
         IAbilityHost _host;
