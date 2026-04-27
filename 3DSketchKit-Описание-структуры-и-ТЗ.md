@@ -19,6 +19,9 @@ Assets/3DSketchKit/
 │   └── Windows/
 ├── Prefabs/                       # Заготовка под префабы (пустые папки + .gitkeep)
 │   ├── BuildingBlocks/
+│   │   ├── Source/                # опционально: FBX/OBJ рампы для меню Generate Building Block Prefabs
+│   │   ├── Meshes/                # процедурный Ramp_Mesh.asset, если Source пуст
+│   │   └── Materials/
 │   ├── Characters/
 │   ├── Zones/
 │   └── UI/

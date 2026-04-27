@@ -8,7 +8,9 @@ Modular Unity prototyping kit: attach plain `IAbility` modules via `AbilityManag
 - `Editor/` — `Window > 3D Sketch Kit` and custom inspectors (`ThreeDSketchKit.Editor`)
 - `_Demo/` — optional sample wiring (legacy `Input` axes)
 - `Documentation/` — reserved for PDF/HTML user docs
-- `Prefabs/` — place packaged prefabs here as you author them
+- `Prefabs/` — place packaged prefabs here as you author them  
+  - **Building blocks:** menu **3D Sketch Kit → Generate Building Block Prefabs** creates `Floor`, `Wall`, `Pillar`, `Beam`, `Door`, `Ramp` under `Prefabs/BuildingBlocks/` (URP Lit materials in `Materials/`).
+  - **Ramp mesh (Blender / etc.):** export **FBX** or **OBJ** into `Prefabs/BuildingBlocks/Source/` as **`RampModel.fbx`** or **`Ramp.fbx`** (also `RampModel.obj` / `Ramp.obj`, or `.blend` if you keep blends in the project). The generator picks the first mesh in the file, preferring a submesh whose name contains **`Ramp`** (rename the mesh object in Blender so it matches, e.g. `Ramp`). If no source file exists, a small built-in wedge is saved to `Prefabs/BuildingBlocks/Meshes/Ramp_Mesh.asset` and **updated in place** on each generate (the asset is no longer deleted every time, so references stay valid). For **MeshCollider** on imported models, select the asset in the Project window → **Model** tab → enable **Read/Write** if the collider does not work.
 - `link.xml` — IL2CPP: preserves the runtime assembly (see Extension below)
 
 ## Quick start
