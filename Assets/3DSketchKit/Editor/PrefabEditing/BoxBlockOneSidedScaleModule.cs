@@ -49,11 +49,11 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             if (box == null)
                 return false;
 
-            var t = go.transform;
+            var targetTransform = go.transform;
             var normalWorld = hit.normal;
 
             // Axis selection in local space (x/y/z) + sign (positive/negative face).
-            var normalLocal = t.InverseTransformDirection(normalWorld);
+            var normalLocal = targetTransform.InverseTransformDirection(normalWorld);
             var axis = GetDominantAxis(normalLocal, out var sign);
             sign = sign >= 0f ? 1f : -1f;
 
@@ -79,7 +79,7 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
 
         static FaceHover BuildFaceHover(GameObject go, BoxCollider box, Vector3 hitPointWorld, int axis, float sign)
         {
-            var t = go.transform;
+            var targetTransform = go.transform;
             var size = box.size;
             var center = box.center;
 
@@ -107,20 +107,23 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             cornersLocal[3][uAxis] -= extents[uAxis];
             cornersLocal[3][vAxis] += extents[vAxis];
 
-            var faceCenterWorld = t.TransformPoint(faceCenterLocal);
+            var faceCenterWorld = targetTransform.TransformPoint(faceCenterLocal);
             var cornersWorld = new Vector3[4];
             for (var i = 0; i < 4; i++)
-                cornersWorld[i] = t.TransformPoint(cornersLocal[i]);
+                cornersWorld[i] = targetTransform.TransformPoint(cornersLocal[i]);
 
             return new FaceHover(
                 go,
                 box,
                 hitPointWorld,
-                t.TransformDirection(AxisToLocalNormal(axis, sign)),
+                targetTransform.TransformDirection(AxisToLocalNormal(axis, sign)),
                 faceCenterWorld,
                 cornersWorld,
                 axis,
-                sign);
+                sign,
+                dragAxisCount: 1,
+                dragAxisAWorld: targetTransform.TransformDirection(AxisToLocalNormal(axis, sign)).normalized,
+                dragAxisBWorld: Vector3.zero);
         }
 
         public bool TryBeginDrag(in FaceHover hover, out FaceDrag drag)
@@ -129,18 +132,22 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             if (hover.Target == null)
                 return false;
 
-            var t = hover.Target.transform;
-            drag = new FaceDrag(hover, t.localScale, t.position, t.lossyScale);
+            var targetTransform = hover.Target.transform;
+            var faceCenterLocal = targetTransform.InverseTransformPoint(hover.FaceCenterWorld);
+            var facePolygonLocal = new Vector3[hover.FacePolygonWorld.Length];
+            for (var i = 0; i < hover.FacePolygonWorld.Length; i++)
+                facePolygonLocal[i] = targetTransform.InverseTransformPoint(hover.FacePolygonWorld[i]);
+            drag = new FaceDrag(hover, targetTransform.localScale, targetTransform.position, targetTransform.lossyScale, faceCenterLocal, facePolygonLocal);
             return true;
         }
 
-        public void ApplyDrag(in FaceDrag drag, float deltaAlongNormalWorld)
+        public void ApplyDrag(in FaceDrag drag, Vector3 dragAxisWorld, float deltaAlongAxisWorld)
         {
             var target = drag.Hover.Target;
             if (target == null)
                 return;
 
-            var t = target.transform;
+            var targetTransform = target.transform;
             if (drag.Hover.Collider is not BoxCollider box)
                 return;
 
@@ -148,7 +155,7 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             if (normalWorld.sqrMagnitude < 0.9f)
                 return;
 
-            var normalLocal = t.InverseTransformDirection(normalWorld);
+            var normalLocal = targetTransform.InverseTransformDirection(normalWorld);
             var axis = GetDominantAxis(normalLocal, out _);
 
             // Use the scale at drag start to avoid accumulating small errors.
@@ -157,7 +164,7 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
                 return;
 
             // Convert world delta to local distance along the axis.
-            var deltaLocal = deltaAlongNormalWorld / lossyAxis;
+            var deltaLocal = deltaAlongAxisWorld / lossyAxis;
 
             var sizeAxis = box.size[axis];
             if (Mathf.Abs(sizeAxis) <= 1e-6f)
@@ -170,12 +177,12 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             var newLocalScale = drag.StartLocalScale;
             newLocalScale[axis] = Mathf.Max(0.01f, drag.StartLocalScale[axis] + scaleDelta);
 
-            Undo.RecordObject(t, "One-sided Scale");
-            t.localScale = newLocalScale;
+            Undo.RecordObject(targetTransform, "One-sided Scale");
+            targetTransform.localScale = newLocalScale;
 
             // Shift the object so the opposite face stays fixed (pivot is assumed centered).
-            t.position = drag.StartWorldPosition + normalWorld * (deltaAlongNormalWorld * 0.5f);
-            EditorUtility.SetDirty(t);
+            targetTransform.position = drag.StartWorldPosition + normalWorld * (deltaAlongAxisWorld * 0.5f);
+            EditorUtility.SetDirty(targetTransform);
         }
 
         static int GetDominantAxis(Vector3 v, out float sign)

@@ -10,6 +10,8 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
         static readonly List<ICustomPrefabEditorModule> Modules = new()
         {
             new BoxBlockOneSidedScaleModule(),
+            new PillarScaleModule(),
+            new RampScaleModule(),
         };
 
         static FaceHover? _hover;
@@ -96,30 +98,36 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
 
         static void DrawHover(in FaceHover hover)
         {
-            if (hover.FaceCornersWorld == null || hover.FaceCornersWorld.Length != 4)
+            if (hover.FacePolygonWorld == null || hover.FacePolygonWorld.Length < 3)
                 return;
 
             Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
-            Handles.DrawSolidRectangleWithOutline(hover.FaceCornersWorld, HoverFill, HoverOutline);
+            using (new Handles.DrawingScope(HoverFill))
+            {
+                Handles.DrawAAConvexPolygon(hover.FacePolygonWorld);
+            }
+            using (new Handles.DrawingScope(HoverOutline))
+            {
+                for (var i = 0; i < hover.FacePolygonWorld.Length; i++)
+                {
+                    var edgeStart = hover.FacePolygonWorld[i];
+                    var edgeEnd = hover.FacePolygonWorld[(i + 1) % hover.FacePolygonWorld.Length];
+                    Handles.DrawLine(edgeStart, edgeEnd);
+                }
+            }
 
-            // Show a "move-like" arrow so the user understands the face can be dragged.
-            var normal = hover.NormalWorld.normalized;
             var center = hover.FaceCenterWorld;
             var size = HandleUtility.GetHandleSize(center) * 0.5f;
             using (new Handles.DrawingScope(ArrowColor))
             {
-                Handles.ArrowHandleCap(
-                    0,
-                    center,
-                    Quaternion.LookRotation(normal),
-                    size,
-                    EventType.Repaint);
+                DrawArrow(center, hover.DragAxisAWorld, size);
+                if (hover.DragAxisCount >= 2)
+                    DrawArrow(center, hover.DragAxisBWorld, size);
             }
         }
 
         static void HandleDrag(Event e)
         {
-            var normal = _drag.Hover.NormalWorld.normalized;
             var anchor = _drag.Hover.FaceCenterWorld;
             EditorSnapUtility.TryGetGridSnap(out var snapStep);
 
@@ -127,9 +135,25 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             // translate the mouse movement into a 1D movement along the face normal.
             if (e.type == EventType.MouseDrag && e.button == 0)
             {
-                var rawDelta = HandleUtility.CalcLineTranslation(_dragStartMouse, e.mousePosition, anchor, normal);
-                var snapped = EditorSnapUtility.SnapDelta(rawDelta, snapStep);
-                ApplyDrag(snapped);
+                var hover = GetDragFaceHover() ?? _drag.Hover;
+                var axisA = hover.DragAxisAWorld.normalized;
+                var rawA = HandleUtility.CalcLineTranslation(_dragStartMouse, e.mousePosition, anchor, axisA);
+                var bestAxis = axisA;
+                var bestRaw = rawA;
+
+                if (hover.DragAxisCount >= 2)
+                {
+                    var axisB = hover.DragAxisBWorld.normalized;
+                    var rawB = HandleUtility.CalcLineTranslation(_dragStartMouse, e.mousePosition, anchor, axisB);
+                    if (Mathf.Abs(rawB) > Mathf.Abs(rawA))
+                    {
+                        bestAxis = axisB;
+                        bestRaw = rawB;
+                    }
+                }
+
+                var snapped = EditorSnapUtility.SnapDelta(bestRaw, snapStep);
+                ApplyDrag(bestAxis, snapped);
                 _hover = GetDragFaceHover();
                 SceneView.RepaintAll();
                 e.Use();
@@ -144,15 +168,27 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             }
         }
 
-        static void ApplyDrag(float snappedDeltaWorld)
+        static void ApplyDrag(Vector3 axisWorld, float snappedDeltaWorld)
         {
             foreach (var module in Modules)
             {
                 if (!module.CanEdit(_drag.Hover.Target))
                     continue;
-                module.ApplyDrag(_drag, snappedDeltaWorld);
+                module.ApplyDrag(_drag, axisWorld, snappedDeltaWorld);
                 return;
             }
+        }
+
+        static void DrawArrow(Vector3 center, Vector3 axisWorld, float size)
+        {
+            if (axisWorld.sqrMagnitude < 1e-6f)
+                return;
+            Handles.ArrowHandleCap(
+                0,
+                center,
+                Quaternion.LookRotation(axisWorld.normalized),
+                size,
+                EventType.Repaint);
         }
 
         static FaceHover? GetDragFaceHover()

@@ -17,8 +17,8 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
         /// </summary>
         bool TryGetDragFace(in FaceDrag drag, out FaceHover hover);
 
-        /// <summary>Applies one-sided scale using a world-space delta along the face normal.</summary>
-        void ApplyDrag(in FaceDrag drag, float deltaAlongNormalWorld);
+        /// <summary>Applies scaling using a world-space delta along a selected drag axis.</summary>
+        void ApplyDrag(in FaceDrag drag, Vector3 dragAxisWorld, float deltaAlongAxisWorld);
     }
 
     public readonly struct FaceHover
@@ -28,9 +28,12 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
         public readonly Vector3 HitPointWorld;
         public readonly Vector3 NormalWorld;
         public readonly Vector3 FaceCenterWorld;
-        public readonly Vector3[] FaceCornersWorld; // 4 corners in winding order
+        public readonly Vector3[] FacePolygonWorld; // 3+ vertices (convex), world-space
         public readonly int LocalAxis; // 0=x,1=y,2=z (dominant axis for the face normal in local space)
         public readonly float AxisSign; // +1 / -1 for the selected face along LocalAxis
+        public readonly int DragAxisCount; // 1 or 2
+        public readonly Vector3 DragAxisAWorld;
+        public readonly Vector3 DragAxisBWorld;
 
         public FaceHover(
             GameObject target,
@@ -38,18 +41,24 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
             Vector3 hitPointWorld,
             Vector3 normalWorld,
             Vector3 faceCenterWorld,
-            Vector3[] faceCornersWorld,
+            Vector3[] facePolygonWorld,
             int localAxis,
-            float axisSign)
+            float axisSign,
+            int dragAxisCount,
+            Vector3 dragAxisAWorld,
+            Vector3 dragAxisBWorld)
         {
             Target = target;
             Collider = collider;
             HitPointWorld = hitPointWorld;
             NormalWorld = normalWorld;
             FaceCenterWorld = faceCenterWorld;
-            FaceCornersWorld = faceCornersWorld;
+            FacePolygonWorld = facePolygonWorld;
             LocalAxis = localAxis;
             AxisSign = axisSign;
+            DragAxisCount = dragAxisCount;
+            DragAxisAWorld = dragAxisAWorld;
+            DragAxisBWorld = dragAxisBWorld;
         }
     }
 
@@ -59,13 +68,23 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
         public readonly Vector3 StartLocalScale;
         public readonly Vector3 StartWorldPosition;
         public readonly Vector3 StartLossyScale;
+        public readonly Vector3 StartFaceCenterLocal;
+        public readonly Vector3[] StartFacePolygonLocal;
 
-        public FaceDrag(FaceHover hover, Vector3 startLocalScale, Vector3 startWorldPosition, Vector3 startLossyScale)
+        public FaceDrag(
+            FaceHover hover,
+            Vector3 startLocalScale,
+            Vector3 startWorldPosition,
+            Vector3 startLossyScale,
+            Vector3 startFaceCenterLocal,
+            Vector3[] startFacePolygonLocal)
         {
             Hover = hover;
             StartLocalScale = startLocalScale;
             StartWorldPosition = startWorldPosition;
             StartLossyScale = startLossyScale;
+            StartFaceCenterLocal = startFaceCenterLocal;
+            StartFacePolygonLocal = startFacePolygonLocal;
         }
     }
 }

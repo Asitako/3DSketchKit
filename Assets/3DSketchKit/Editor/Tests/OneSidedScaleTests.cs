@@ -52,9 +52,12 @@ namespace ThreeDSketchKit.Editor.Tests
                             hitPointWorld: Vector3.zero,
                             normalWorld: normalWorld,
                             faceCenterWorld: Vector3.zero,
-                            faceCornersWorld: new Vector3[4],
+                            facePolygonWorld: new Vector3[4],
                             localAxis: axis,
-                            axisSign: sign);
+                            axisSign: sign,
+                            dragAxisCount: 1,
+                            dragAxisAWorld: normalWorld.normalized,
+                            dragAxisBWorld: Vector3.zero);
 
                         Assert.IsTrue(module.TryBeginDrag(hover, out var drag));
 
@@ -93,7 +96,7 @@ namespace ThreeDSketchKit.Editor.Tests
 
         static void ApplyAndAssert(BoxBlockOneSidedScaleModule module, FaceDrag drag, int axis, float oppositeSign, float oppositeStart, float delta)
         {
-            module.ApplyDrag(drag, delta);
+            module.ApplyDrag(drag, drag.Hover.NormalWorld, delta);
             var oppositeNow = GetFaceCoordinateAlongAxis(drag.Hover.Target, axis, oppositeSign);
             Assert.That(oppositeNow, Is.EqualTo(oppositeStart).Within(1e-4f),
                 $"Opposite face drifted on axis={axis} for delta={delta}. start={oppositeStart}, now={oppositeNow}");
@@ -101,12 +104,12 @@ namespace ThreeDSketchKit.Editor.Tests
 
         static float GetFaceCoordinateAlongAxis(GameObject go, int axis, float sign)
         {
-            var b = go.GetComponent<Collider>().bounds; // world AABB is fine for identity rotation
-            var center = b.center;
-            var ext = b.extents;
-            var p = center;
-            p[axis] += (sign >= 0f ? 1f : -1f) * ext[axis];
-            return p[axis];
+            var worldBounds = go.GetComponent<Collider>().bounds; // world AABB is fine for identity rotation
+            var boundsCenter = worldBounds.center;
+            var boundsExtents = worldBounds.extents;
+            var facePoint = boundsCenter;
+            facePoint[axis] += (sign >= 0f ? 1f : -1f) * boundsExtents[axis];
+            return facePoint[axis];
         }
     }
 }
