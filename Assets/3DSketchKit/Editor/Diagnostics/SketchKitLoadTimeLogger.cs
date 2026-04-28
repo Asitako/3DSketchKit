@@ -14,19 +14,31 @@ namespace ThreeDSketchKit.Editor.Diagnostics
 
         static SketchKitLoadTimeLogger()
         {
+            SketchKitInitTimings.Begin("EditorInit.LoadTimeLogger");
             // Log once per editor session (prevents spam on domain reloads).
             if (SessionState.GetBool(SessionKey, false))
+            {
+                SketchKitInitTimings.End("EditorInit.LoadTimeLogger");
                 return;
+            }
             SessionState.SetBool(SessionKey, true);
 
             // Defer to the next tick so Editor timeSinceStartup is stable.
             EditorApplication.delayCall += Log;
+            SketchKitInitTimings.End("EditorInit.LoadTimeLogger");
         }
 
         static void Log()
         {
             var secondsSinceEditorStart = EditorApplication.timeSinceStartup;
-            Debug.Log($"[3D Sketch Kit] Время загрузки (инициализации) ассета: {secondsSinceEditorStart:0.000} сек (EditorApplication.timeSinceStartup).");
+            var sketchKitInitTotal = SketchKitInitTimings.GetTotalSeconds();
+            var sketchKitInitSummed = SketchKitInitTimings.GetSummedModuleSeconds();
+
+            Debug.Log(
+                "[3D Sketch Kit] Unity startup time: " + secondsSinceEditorStart.ToString("0.000") + "s (EditorApplication.timeSinceStartup)\n" +
+                "[3D Sketch Kit] Sketch Kit init time: " + sketchKitInitTotal.ToString("0.000") + "s (init window), " +
+                sketchKitInitSummed.ToString("0.000") + "s (summed modules)\n" +
+                SketchKitInitTimings.BuildReport());
         }
     }
 }

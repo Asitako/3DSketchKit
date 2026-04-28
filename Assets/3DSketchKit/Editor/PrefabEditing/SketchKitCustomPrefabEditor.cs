@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using ThreeDSketchKit.Editor.Diagnostics;
 
 namespace ThreeDSketchKit.Editor.PrefabEditing
 {
@@ -25,7 +26,15 @@ namespace ThreeDSketchKit.Editor.PrefabEditing
 
         static SketchKitCustomPrefabEditor()
         {
-            SceneView.duringSceneGui += OnSceneGUI;
+            SketchKitInitTimings.Begin("EditorInit.CustomPrefabEditor.SceneViewHook");
+            try
+            {
+                SceneView.duringSceneGui += OnSceneGUI;
+            }
+            finally
+            {
+                SketchKitInitTimings.End("EditorInit.CustomPrefabEditor.SceneViewHook");
+            }
         }
 
         static void OnSceneGUI(SceneView sceneView)

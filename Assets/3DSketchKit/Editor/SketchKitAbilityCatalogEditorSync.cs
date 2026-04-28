@@ -1,5 +1,6 @@
 using ThreeDSketchKit.Utility;
 using UnityEditor;
+using ThreeDSketchKit.Editor.Diagnostics;
 
 namespace ThreeDSketchKit.Editor
 {
@@ -9,6 +10,17 @@ namespace ThreeDSketchKit.Editor
     [InitializeOnLoad]
     static class SketchKitAbilityCatalogEditorSync
     {
-        static SketchKitAbilityCatalogEditorSync() => AbilityTypeCatalog.RefreshDiscoveredAbilities();
+        static SketchKitAbilityCatalogEditorSync()
+        {
+            SketchKitInitTimings.Begin("EditorSync.AbilityTypeCatalog.RefreshDiscoveredAbilities");
+            try
+            {
+                AbilityTypeCatalog.RefreshDiscoveredAbilities();
+            }
+            finally
+            {
+                SketchKitInitTimings.End("EditorSync.AbilityTypeCatalog.RefreshDiscoveredAbilities");
+            }
+        }
     }
 }

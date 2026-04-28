@@ -4,6 +4,17 @@
 - [ ] **Shift: растягивание блоков вдоль нормалей к плоскости** — реализовать режим (с зажатым Shift): при манипуляции выбранными **building block**-ами растягивать их **вдоль нормалей** к **текущей выбранной плоскости** (ось масштаба/экструзии согласовать с гизмо/скетч-плоскостью; уточнить в UX).
 - [ ] (добавляйте сюда пункты по мере появления)
 
+## Если ассет долго грузится (Editor) — что оптимизируем
+
+- [ ] **Сначала измеряем, что реально тормозит**: включаем/используем `SketchKitInitTimings` (см. `Assets/3DSketchKit/Editor/Diagnostics/SketchKitInitTimings.cs`) и сравниваем:
+  - `Unity startup time` (общее время старта редактора)
+  - `Sketch Kit init time` (окно инициализации ассета + разбивка по модулям)
+- [ ] **Убираем тяжёлые операции из автозапуска**: всё, что висит на `[InitializeOnLoad]`, переводим на “ленивую” инициализацию (по открытию окна `Window > 3D Sketch Kit` или по кнопке).
+- [ ] **Reflection-скан типов** (`AbilityTypeCatalog.RefreshDiscoveredAbilities`):
+  - в Editor заменить `AppDomain.CurrentDomain.GetAssemblies()+GetTypes()` на `UnityEditor.TypeCache` (`TypeCache.GetTypesWithAttribute<SketchKitAbilityIdAttribute>()`) и фильтрацию по `IAbility`
+  - добавить кэш (например, в `SessionState`/`EditorPrefs`) и инвалидировать по событию компиляции/перезагрузки домена
+- [ ] **Избегаем лишних подписок/хуков SceneView**: всё, что реагирует на `SceneView.duringSceneGui`, должно быть максимально лёгким, а тяжёлые расчёты выполняться только при реальном использовании инструмента (например, при зажатом Shift и наличии hover).
+
 ## Не реализовано по ТЗ (MVP) — не считать багами
 
 - [ ] **Документация**: `Assets/3DSketchKit/Documentation/` — только плейсхолдер, PDF/HTML из ТЗ не добавлены.
